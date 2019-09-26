@@ -55,7 +55,9 @@ EOT
   sudo systemctl restart avahi-daemon
 
   # Upload RPi basic configuration
-  scp config.txt radio:/boot/config.txt
+  echo "please run the following command from your local machine's cloned repo"
+  echo "replace \$hostname with the actual hostname that you set in the previous step"
+  echo 'scp config.txt $hostname:/boot/config.txt'
 
   # setup gpsd
   sudo bash -c "sed -i 's/DEVICES=.*/DEVICES=\"\/dev\/ttyACM0\"/g' /etc/default/gpsd"
