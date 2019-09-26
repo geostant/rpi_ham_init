@@ -1,6 +1,5 @@
 #!/bin/bash
 HOME="/home/pi"
-hostname="radio"
 
 function stage1 {
   # SSH Public key
@@ -11,10 +10,31 @@ function stage1 {
   echo "ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABAQDAy9gcmm77A0sMith3eRgCx/8p7U40K63ZVGdpWxadhN0bUpNtmE9Ja/xVcbVrHBwDrLQRNMM2IwX5MsSt/bn//vXWAKpGu53SKzgXbC1miFuRvv7/J4qjOeydlxOD/eomHdBCC2dsY7mBmlWoQ3LeQL19Om8qehL2yZNUETq6xpcyZcLivPVcYRgqJbBSDWyoKzhuNKi2gEwFj4P80wE76aJ5mSZBAp5bYZn0u8/5VkEv2FG2s/4bnP3Kykmqhb+RtFAac1pJBo45QUEIgUQJUJ7p2NoOrwrUnV1NDiPc8UlU+mji9Ng97jA3QiXBNJEoe7T8IDx/6rdfIb1LrvMx yaniv@ubuntu" > authorized_keys
   chmod 600 authorized_keys
 
+  # fix locale
+  sudo bash -c "sed -i 's/# en_US.UTF-8 UTF-8/en_US.UTF-8 UTF-8/' /etc/locale.gen"
+  sudo locale-gen en_US.UTF-8
+  sudo update-locale
+
   # basic installations
   sudo apt update && sudo apt upgrade -y
-  sudo apt install -y vim libqt5multimedia5-plugins libqt5serialport5 libqt5sql5-sqlite libfftw3-* gpsd gpsd-clients python-gps chrony qt5-default
+  sudo apt install -y vim libqt5multimedia5-plugins libqt5serialport5 libqt5sql5-sqlite libfftw3-* gpsd gpsd-clients python-gps chrony qt5-default libasound2-dev
   sudo apt --fix-broken install -y
+
+  echo -n "Set static IP on the machine? [y/N]: "
+  read answer
+
+  if [ $answer == "y" ] || [ $answer == "yes" ]; then
+    # Set static IP
+    echo -n "Enter desired static IP address: "
+    read ip
+    sudo tee -a << EOT >> /etc/dhcpcd.conf
+interface wlan0
+
+static ip_address=$ip/24
+static routers=192.168.1.1
+static domain_name_servers=192.168.1.1
+EOT
+  fi
 
   # Aliases
   echo "alias ll='ls -l'" >> $HOME/.bashrc
@@ -25,9 +45,12 @@ function stage1 {
   sudo rm /root/.bashrc && sudo ln -s $HOME/.bashrc /root/.bashrc
 
   # Set hostname
+  echo -n "Enter desired hostname: "
+  read hostname
   sudo hostname $hostname
   sudo bash -c "echo $hostname > /etc/hostname"
   sudo bash -c "sed -i 's/127.0.1.1.*/127.0.1.1       $hostname/g' /etc/hosts"
+  sudo bash -c "sed -i 's/^hostname/$hostname/' /etc/dhcpcd.conf"
   sudo hostnamectl set-hostname "$hostname"
   sudo systemctl restart avahi-daemon
 
@@ -70,11 +93,12 @@ function stage2 {
 }
 
 function stage3 {
+  sudo apt --fix-broken install
+
   # Set crontab to sync clock every minute
   sudo bash -c "echo '* * * * * root /bin/sh chronyc makestep' >> /etc/cron.d/per_minute"
   
   # Direwofl
-  sudo apt-get install -y libasound2-dev
   cd $HOME
   git clone https://www.github.com/wb2osz/direwolf
   cd direwolf
@@ -89,6 +113,10 @@ function stage3 {
   sudo dpkg -i "$TEMP_DEB"
   rm -f "$TEMP_DEB"
 
+  # Install RaspAP
+  wget -q https://git.io/voEUQ -O /tmp/raspap && bash /tmp/raspap
+
+  echo "Insatllation finished!"
   rm $HOME/.2
   touch $HOME/.3
 }

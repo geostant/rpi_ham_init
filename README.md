@@ -11,4 +11,4 @@ I recommend using the latest Raspberry Pi unit (current 4) with the max RAM (cur
 ## This shell script will install and configure the following
 - Direwolf
 - WSJT-X
--
+- RaspAP
