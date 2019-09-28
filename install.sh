@@ -55,9 +55,7 @@ EOT
   sudo systemctl restart avahi-daemon
 
   # Upload RPi basic configuration
-  echo "please run the following command from your local machine's cloned repo"
-  echo "replace \$hostname with the actual hostname that you set in the previous step"
-  echo 'scp config.txt $hostname:/boot/config.txt'
+  sudo cp config.txt /boot/config.txt
 
   # setup gpsd
   sudo bash -c "sed -i 's/DEVICES=.*/DEVICES=\"\/dev\/ttyACM0\"/g' /etc/default/gpsd"
@@ -80,7 +78,7 @@ function stage2 {
   echo "gpsmon -n" > $HOME/gpsmon && chmod +x $HOME/gpsmon
 
   # setup chrony sources
-  sudo bash -c "sed -i 's/pool.*/# pool 2.debian.pool.ntp.org iburst/' /etc/chrony/chrony.conf"
+  #sudo bash -c "sed -i 's/pool.*/# pool 2.debian.pool.ntp.org iburst/' /etc/chrony/chrony.conf" # disable pools and leave only NMEA - for debug only
   sudo bash -c "echo '' >> /etc/chrony/chrony.conf"
   sudo bash -c "echo 'refclock SHM 0 offset 0.5 delay 0.2 refid NMEA' >> /etc/chrony/chrony.conf"
 
