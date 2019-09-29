@@ -12,3 +12,8 @@ I recommend using the latest Raspberry Pi unit (current 4) with the max RAM (cur
 - Direwolf
 - WSJT-X
 - RaspAP
+
+# How to apply?
+On a new Rpi run
+`cd ~ && git clone git@github.com:geostant/rpi_ham_init.git && cd rpi_ham_init`
+`chmod +x install.sh && ./install.sh`
