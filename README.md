@@ -16,4 +16,4 @@ I recommend using the latest Raspberry Pi unit (current 4) with the max RAM (cur
 # How to apply?
 On a new Rpi run<br>
 `cd ~ && git clone https://github.com/geostant/rpi_ham_init.git && cd rpi_ham_init`<br>
-`chmod +x install.sh && ./install.sh`
+`./install.sh`
