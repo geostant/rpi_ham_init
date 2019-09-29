@@ -130,7 +130,7 @@ elif [ -f "$HOME/.2" ]; then
 elif [ -f "$HOME/.3" ]; then
   echo "no need to run me again"
   exit 0
-elif [ ! -f "/home/.ssh/authorized_keys" ]
+elif [ ! -f "/home/.ssh/authorized_keys" ]; then
   stage1
 fi
 
