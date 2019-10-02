@@ -1,7 +1,12 @@
 #!/bin/bash
+# TODO: Add check error
+# TODO: Add --fix-broken to all installs
+
 HOME="/home/pi"
 
 function stage1 {
+  # Change password for RPi
+  sudo bash -c "echo -n "raspberry\pi\pi" | passwd pi"
   # SSH Public key
   cd $HOME
   mkdir .ssh
@@ -20,6 +25,7 @@ function stage1 {
   sudo apt install -y vim libqt5multimedia5-plugins libqt5serialport5 libqt5sql5-sqlite libfftw3-* gpsd gpsd-clients python-gps chrony qt5-default libasound2-dev
   sudo apt --fix-broken install -y
 
+  #TODO: get router IP for static IP
   echo -n "Set static IP on the machine? [y/N]: "
   read answer
 
@@ -57,6 +63,9 @@ EOT
   # Upload RPi basic configuration
   sudo cp config.txt /boot/config.txt
 
+  # Enable VNC
+  sudo bash -c "ln -s /usr/lib/systemd/system/vncserver-x11-serviced.service /etc/systemd/system/multi-user.target.wants/vncserver-x11-serviced.service"
+
   # setup gpsd
   sudo bash -c "sed -i 's/DEVICES=.*/DEVICES=\"\/dev\/ttyACM0\"/g' /etc/default/gpsd"
   sudo bash -c "sed -i 's/GPSD_OPTIONS=.*/GPSD_OPTIONS=\"-n\"/g' /etc/default/gpsd"
@@ -73,6 +82,7 @@ EOT
 }
 
 function stage2 {
+  # TODO: Add some annotation for better explaination on what the system just did
   # creating some shortcuts in $HOME
   echo "cgps -s" > $HOME/gps_table && chmod +x $HOME/gps_table
   echo "gpsmon -n" > $HOME/gpsmon && chmod +x $HOME/gpsmon
@@ -100,8 +110,8 @@ function stage3 {
   
   # Direwofl
   cd $HOME
-  git clone https://www.github.com/wb2osz/direwolf
-  cd direwolf
+  git clone https://www.github.com/wb2osz/direwolf $HOME/direwolf
+  cd $HOME/direwolf
   make
   sudo make install
   make install-conf
@@ -115,6 +125,19 @@ function stage3 {
 
   # Install RaspAP
   wget -q https://git.io/voEUQ -O /tmp/raspap && bash /tmp/raspap
+
+  sudo bash -c "sed -i 's/192.168.50.50/10.0.0.2/' /etc/dnsmasq.conf"
+  sudo bash -c "sed -i 's/192.168.50.150/10.0.0.50/' /etc/dnsmasq.conf"
+  sudo bash -c "sed -i 's/192.168.50.1/10.0.0.1/' /etc/dhcpcd.conf"
+
+  echo "RaspAP connection details"
+
+  echo "IP address: 10.0.0.1
+Username: admin
+Password: secret
+DHCP range: 10.0.0.1 to 10.0.0.50
+SSID: raspi-webgui
+Password: ChangeMe"
 
   echo "Insatllation finished!"
   rm $HOME/.2
