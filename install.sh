@@ -3,6 +3,8 @@
 # TODO: Add --fix-broken to all installs
 
 HOME="/home/pi"
+FLRIG_VER="1.3.48"
+FLDIGI_VER="4.1.08"
 
 function stage1 {
   # Change password for RPi
@@ -122,6 +124,29 @@ function stage3 {
   wget --no-check-certificate -O "$TEMP_DEB" "https://physics.princeton.edu/pulsar/K1JT/wsjtx_${WSJTX_VER}_armhf.deb" &&
   sudo dpkg -i "$TEMP_DEB"
   rm -f "$TEMP_DEB"
+
+  # Install MSHV
+  cd $HOME
+
+  # Install FLRIG
+  sudp apt update
+  sudo apt install -y libfltk1.3-dev libjpeg9-dev libxft-dev libxinerama-dev libxcursor-dev libsndfile1-dev libsamplerate0-dev portaudio19-dev libusb-1.0-0-dev libpulse-dev
+  
+  cd $HOME
+  wget http://www.w1hkj.com/files/flrig/flrig-$FLRIG_VER.tar.gz
+  tar -zxf flrig-$FLRIG_VER.tar.tg
+  rm flrig-$FLRIG_VER.tar.gz
+  cd flrig-$FLRIG_VER
+
+  ./configure --prefix=/usr/local --enable-static
+  make -j printf %.$2f $(bc <<< "$(cat /proc/cpuinfo | awk '/^processor/{print $3}' | wc -l)*1.5")
+  sudo make install
+  sudo ldconfig
+
+  # Install FLDIGI
+  cd $HOME
+  wget http://www.w1hkj.com/files/fldigi/fldigi-$FLDIGI_VER.tar.gz
+  tar -zxf fldigi-$FLDIGI_VER.tar.tz
 
   # Install RaspAP
   wget -q https://git.io/voEUQ -O /tmp/raspap && bash /tmp/raspap
