@@ -3,6 +3,8 @@
 # TODO: Add --fix-broken to all installs
 
 HOME="/home/pi"
+NPROC=$(printf %.$2f $(bc <<< "$(cat /proc/cpuinfo | awk '/^processor/{print $3}' | wc -l)*1.5"))
+HAMLIB_VER="3.3"
 FLRIG_VER="1.3.48"
 FLDIGI_VER="4.1.08"
 
@@ -86,7 +88,7 @@ EOT
 function stage2 {
   # TODO: Add some annotation for better explaination on what the system just did
   # creating some shortcuts in $HOME
-  echo "cgps -s" > $HOME/gps_table && chmod +x $HOME/gps_table
+  echo "cgps -s" > $HOME/gps && chmod +x $HOME/gps
   echo "gpsmon -n" > $HOME/gpsmon && chmod +x $HOME/gpsmon
 
   # setup chrony sources
@@ -114,7 +116,7 @@ function stage3 {
   cd $HOME
   git clone https://www.github.com/wb2osz/direwolf $HOME/direwolf
   cd $HOME/direwolf
-  make
+  make -j $NPROC
   sudo make install
   make install-conf
 
@@ -128,6 +130,18 @@ function stage3 {
   # Install MSHV
   cd $HOME
 
+  # Install HAMLIB
+  cd $HOME
+  wget https://github.com/Hamlib/Hamlib/releases/download/$HAMLIB_VER/hamlib-$HAMLIB_VER.tar.gz
+  tar -zxf hamlib-$HAMLIB_VER.tar.gz
+  rm hamlib-$HAMLIB_VER.tar.gz
+  cd hamlib-$HAMLIB_VER
+
+  ./configure --prefix=/usr/local --enable-static
+  make -j $NPROC
+  sudo make install
+  sudo ldconfig
+
   # Install FLRIG
   sudp apt update
   sudo apt install -y libfltk1.3-dev libjpeg9-dev libxft-dev libxinerama-dev libxcursor-dev libsndfile1-dev libsamplerate0-dev portaudio19-dev libusb-1.0-0-dev libpulse-dev
@@ -139,7 +153,7 @@ function stage3 {
   cd flrig-$FLRIG_VER
 
   ./configure --prefix=/usr/local --enable-static
-  make -j printf %.$2f $(bc <<< "$(cat /proc/cpuinfo | awk '/^processor/{print $3}' | wc -l)*1.5")
+  make -j $NPROC
   sudo make install
   sudo ldconfig
 
@@ -147,6 +161,10 @@ function stage3 {
   cd $HOME
   wget http://www.w1hkj.com/files/fldigi/fldigi-$FLDIGI_VER.tar.gz
   tar -zxf fldigi-$FLDIGI_VER.tar.tz
+
+  ./configure --prefix=/usr/local --enable-static
+  make -j $NPROC
+  sudo make install
 
   # Install RaspAP
   wget -q https://git.io/voEUQ -O /tmp/raspap && bash /tmp/raspap
